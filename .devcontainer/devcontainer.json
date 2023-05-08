@@ -5,7 +5,7 @@
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"image": "mcr.microsoft.com/devcontainers/base:jammy",
 	"mounts": [
-		"source=${env:HOME}${env:USERPROFILE}/.aws,target=/root/.aws,type=bind"
+		"source=${env:HOME}${env:USERPROFILE}/.aws,target=/home/vscode/.aws,type=bind"
 	],
 	"features": {
 		"ghcr.io/devcontainers/features/aws-cli:1": {
@@ -35,11 +35,12 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"HashiCorp.terraform"
+				"HashiCorp.terraform",
+				"danielthielking.aws-cloudformation-yaml"
 			]
 		}
 	},
-	"postCreateCommand": ". ${NVM_DIR}/nvm.sh && nvm install --lts"
+	"postCreateCommand": ". ${NVM_DIR}/nvm.sh"
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},

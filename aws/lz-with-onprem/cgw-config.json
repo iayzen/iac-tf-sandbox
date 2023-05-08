@@ -1,0 +1,117 @@
+{
+  "+p_xml": "version=\"1.0\" encoding=\"UTF-8\"",
+  "vpn_connection": {
+    "+@id": "vpn-000c95ca5af34c894",
+    "customer_gateway_id": "cgw-01de400f01b559a79",
+    "vpn_gateway_id": null,
+    "vpn_connection_type": "ipsec.1",
+    "ipsec_tunnel": [
+      {
+        "customer_gateway": {
+          "tunnel_outside_address": {
+            "ip_address": "3.73.199.105"
+          },
+          "tunnel_inside_address": {
+            "ip_address": "169.254.118.66",
+            "network_mask": "255.255.255.252",
+            "network_cidr": "30"
+          },
+          "bgp": {
+            "asn": "65000",
+            "hold_time": "30"
+          }
+        },
+        "vpn_gateway": {
+          "tunnel_outside_address": {
+            "ip_address": "3.71.127.131"
+          },
+          "tunnel_inside_address": {
+            "ip_address": "169.254.118.65",
+            "network_mask": "255.255.255.252",
+            "network_cidr": "30"
+          },
+          "bgp": {
+            "asn": "64512",
+            "hold_time": "30"
+          }
+        },
+        "ike": {
+          "authentication_protocol": "sha1",
+          "encryption_protocol": "aes-128-cbc",
+          "lifetime": "28800",
+          "perfect_forward_secrecy": "group2",
+          "mode": "main",
+          "pre_shared_key": "HiyF5ESAB48aisq7.DSEH67uGKRpL_1c"
+        },
+        "ipsec": {
+          "protocol": "esp",
+          "authentication_protocol": "hmac-sha1-96",
+          "encryption_protocol": "aes-128-cbc",
+          "lifetime": "3600",
+          "perfect_forward_secrecy": "group2",
+          "mode": "tunnel",
+          "clear_df_bit": "true",
+          "fragmentation_before_encryption": "true",
+          "tcp_mss_adjustment": "1379",
+          "dead_peer_detection": {
+            "interval": "10",
+            "retries": "3"
+          }
+        }
+      },
+      {
+        "customer_gateway": {
+          "tunnel_outside_address": {
+            "ip_address": "3.73.199.105"
+          },
+          "tunnel_inside_address": {
+            "ip_address": "169.254.74.126",
+            "network_mask": "255.255.255.252",
+            "network_cidr": "30"
+          },
+          "bgp": {
+            "asn": "65000",
+            "hold_time": "30"
+          }
+        },
+        "vpn_gateway": {
+          "tunnel_outside_address": {
+            "ip_address": "3.125.163.140"
+          },
+          "tunnel_inside_address": {
+            "ip_address": "169.254.74.125",
+            "network_mask": "255.255.255.252",
+            "network_cidr": "30"
+          },
+          "bgp": {
+            "asn": "64512",
+            "hold_time": "30"
+          }
+        },
+        "ike": {
+          "authentication_protocol": "sha1",
+          "encryption_protocol": "aes-128-cbc",
+          "lifetime": "28800",
+          "perfect_forward_secrecy": "group2",
+          "mode": "main",
+          "pre_shared_key": "bUeABodPA33LA4ANn_iXc678jXDH36V7"
+        },
+        "ipsec": {
+          "protocol": "esp",
+          "authentication_protocol": "hmac-sha1-96",
+          "encryption_protocol": "aes-128-cbc",
+          "lifetime": "3600",
+          "perfect_forward_secrecy": "group2",
+          "mode": "tunnel",
+          "clear_df_bit": "true",
+          "fragmentation_before_encryption": "true",
+          "tcp_mss_adjustment": "1379",
+          "dead_peer_detection": {
+            "interval": "10",
+            "retries": "3"
+          }
+        }
+      }
+    ]
+  }
+}
