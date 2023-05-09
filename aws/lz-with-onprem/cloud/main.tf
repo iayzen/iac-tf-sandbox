@@ -157,6 +157,15 @@ module "cgw-bgp-asn" {
   }
 }
 
+module "tunnel1-inside-cidr" {
+  source       = "Invicton-Labs/shell-resource/external"
+  command_unix = "echo $CGWCONFIG | ./subnet-from-ip-and-mask.sh"
+  working_dir = path.module
+  environment_sensitive = {
+    CGWCONFIG = module.vpn_gateway.vpn_connection_customer_gateway_configuration
+  }
+}
+
 module "onprem-vpc" {
   providers = {
     aws = providers.onprem
@@ -227,7 +236,6 @@ resource "aws_cloudformation_stack" "strongswan-vpn-gateway" {
   }
 }
 
-
 output "tgw-id" {
   value = aws_ec2_transit_gateway.this.id
 }
@@ -274,7 +282,7 @@ output "vpn-gateway-tunnel1-vpg-inside-ip" {
 }
 
 output "vpn-gateway-tunnel1-cgw-inside-ip" {
-  value = module.vpn_gateway.vpn_connection_tunnel1_cgw_inside_address
+  value = module.tunnel1-inside-cidr.stdout
 }
 
 output "vpn-gateway-cgw-bgp-asn" {
