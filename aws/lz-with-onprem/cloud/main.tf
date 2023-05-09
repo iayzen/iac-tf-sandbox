@@ -166,6 +166,15 @@ module "tunnel1-inside-cidr" {
   }
 }
 
+module "tunnel2-inside-cidr" {
+  source       = "Invicton-Labs/shell-resource/external"
+  command_unix = "echo $CGWCONFIG | ./subnet-from-ip-and-mask.sh"
+  working_dir = path.module
+  environment_sensitive = {
+    CGWCONFIG = module.vpn_gateway.vpn_connection_customer_gateway_configuration
+  }
+}
+
 module "onprem-vpc" {
   providers = {
     aws = providers.onprem

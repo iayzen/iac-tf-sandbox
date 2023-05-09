@@ -33,24 +33,25 @@ data "aws_caller_identity" "onprem" {
 
 data "aws_caller_identity" "cloud" {}
 
-resource "aws_ec2_transit_gateway" "this" {
-  description = "My TGW"
-  tags = {
-    Name = "tgw-poc-20230507"
-  }
-}
+# resource "aws_ec2_transit_gateway" "this" {
+#   description = "My TGW"
+#   tags = {
+#     Name = "tgw-poc-20230507"
+#   }
+# }
 
-resource "aws_ram_resource_share" "tgw-resource-share" {
-  name                      = "tgw-resource-share-20230507"
-  allow_external_principals = true
-}
+# resource "aws_ram_resource_share" "tgw-resource-share" {
+#   name                      = "tgw-resource-share-20230507"
+#   allow_external_principals = true
+# }
 
-resource "aws_ram_principal_association" "tgw-resource-share-invite" {
-  principal          = data.aws_caller_identity.onprem.account_id
-  resource_share_arn = aws_ram_resource_share.tgw-resource-share.arn
-}
+# resource "aws_ram_principal_association" "tgw-resource-share-invite" {
+#   principal          = data.aws_caller_identity.onprem.account_id
+#   resource_share_arn = aws_ram_resource_share.tgw-resource-share.arn
+# }
 
-resource "aws_ram_resource_association" "example" {
-  resource_arn       = aws_ec2_transit_gateway.this.arn
-  resource_share_arn = aws_ram_resource_share.tgw-resource-share.arn
-}
+# resource "aws_ram_resource_association" "example" {
+#   resource_arn       = aws_ec2_transit_gateway.this.arn
+#   resource_share_arn = aws_ram_resource_share.tgw-resource-share.arn
+# }
+
