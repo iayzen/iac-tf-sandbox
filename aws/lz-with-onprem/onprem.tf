@@ -87,6 +87,13 @@ module "onprem-vpc" {
   enable_dns_support   = true
 }
 
+data "aws_security_group" "onprem-vpc-default-sg" {
+  provider   = aws.onprem
+  depends_on = [module.onprem-vpc]
+  name       = "default"
+  vpc_id     = module.onprem-vpc.vpc_id
+}
+
 resource "aws_cloudformation_stack" "strongswan-vpn-gateway" {
   provider           = aws.onprem
   depends_on         = [aws_secretsmanager_secret_version.vpn-tunnel1-psk-value, aws_secretsmanager_secret_version.vpn-tunnel2-psk-value]
@@ -146,3 +153,87 @@ resource "aws_route" "onprem-vpc-route-through-vpn" {
   destination_cidr_block = "10.0.0.0/8"
   network_interface_id   = data.aws_instance.strongswan-vpn-gateway.network_interface_id
 }
+
+# resource "aws_security_group" "onprem-vpc-endpoint-sg" {
+#   provider    = aws.onprem
+#   name_prefix = "onprem-vpc-endpoint-sg"
+#   description = "Endpoint Security Group"
+#   vpc_id      = module.onprem-vpc.vpc_id
+# }
+
+# resource "aws_vpc_security_group_ingress_rule" "onprem-vpc-endpoint-sg_TLS" {
+#   provider          = aws.onprem
+#   security_group_id = aws_security_group.onprem-vpc-endpoint-sg.id
+#   description       = "TLS from VPC"
+#   cidr_ipv4         = module.onprem-vpc.vpc_cidr_block
+#   from_port         = 443
+#   ip_protocol       = "tcp"
+#   to_port           = 443
+# }
+
+# resource "aws_vpc_security_group_ingress_rule" "onprem-vpc-endpoint-sg_InternalNetworks" {
+#   provider          = aws.onprem
+#   security_group_id = aws_security_group.onprem-vpc-endpoint-sg.id
+#   description       = "All traffic from internal networks"
+#   cidr_ipv4         = "10.0.0.0/8"
+#   ip_protocol       = "-1"
+# }
+
+# module "onprem-vpc-endpoints" {
+#   providers = {
+#     aws = aws.onprem
+#   }
+
+#   create = false
+
+#   source             = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
+#   vpc_id             = module.onprem-vpc.vpc_id
+#   subnet_ids = module.onprem-vpc.private_subnets
+#   security_group_ids = [aws_security_group.onprem-vpc-s3-endpoint-sg.id, data.aws_security_group.onprem-vpc-default-sg.id]
+
+#   endpoints = {
+#     s3 = {
+#       service = "s3"
+#       # private_dns_enabled = true
+#       tags       = { Name = "s3-vpc-endpoint" }
+#       # subnet_ids = module.onprem-vpc.private_subnets
+#     },
+#     s3gateway = {
+#       service             = "s3"
+#       vpc_endpoint_type   = "gateway"
+#       tags                = { Name = "s3gateway-vpc-endpoint" }
+#       subnet_ids          = module.onprem-vpc.private_subnets
+#       route_table_ids     = module.onprem-vpc.private_route_table_ids
+#     },
+#     ssm = {
+#       service    = "ssm"
+#       tags       = { Name = "ssm-vpc-endpoint" }
+#       subnet_ids = module.onprem-vpc.private_subnets
+#     },
+#     ssmmessages = {
+#       service    = "ssmmessages"
+#       tags       = { Name = "ssmmessages-vpc-endpoint" }
+#       subnet_ids = module.onprem-vpc.private_subnets
+#     },
+#     ec2messages = {
+#       service    = "ec2messages"
+#       tags       = { Name = "ec2messages-vpc-endpoint" }
+#       subnet_ids = module.onprem-vpc.private_subnets
+#     },
+#     ec2 = {
+#       service    = "ec2"
+#       tags       = { Name = "ec2-vpc-endpoint" }
+#       subnet_ids = module.onprem-vpc.private_subnets
+#     },
+#     kms = {
+#       service    = "kms"
+#       tags       = { Name = "kms-vpc-endpoint" }
+#       subnet_ids = module.onprem-vpc.private_subnets
+#     },
+#     logs = {
+#       service    = "logs"
+#       tags       = { Name = "logs-vpc-endpoint" }
+#       subnet_ids = module.onprem-vpc.private_subnets
+#     }
+#   }
+# }

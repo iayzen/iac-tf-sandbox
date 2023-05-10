@@ -26,6 +26,14 @@ resource "aws_vpc_security_group_ingress_rule" "onprem-vpc-test-instance-sg_TLS"
   to_port           = 443
 }
 
+resource "aws_vpc_security_group_ingress_rule" "onprem-vpc-test-instance-sg_AllVPCTraffic" {
+  provider          = aws.onprem
+  security_group_id = aws_security_group.onprem-vpc-test-instance-sg.id
+  description       = "All TCP traffic from VPC"
+  cidr_ipv4         = module.onprem-vpc.vpc_cidr_block
+  ip_protocol       = "-1"
+}
+
 resource "aws_vpc_security_group_ingress_rule" "onprem-vpc-test-instance-sg_ICMPfromInternal" {
   provider          = aws.onprem
   security_group_id = aws_security_group.onprem-vpc-test-instance-sg.id
@@ -36,6 +44,14 @@ resource "aws_vpc_security_group_ingress_rule" "onprem-vpc-test-instance-sg_ICMP
   to_port           = -1
 }
 
+resource "aws_vpc_security_group_egress_rule" "onprem-vpc-test-instance-sg_AllowAllEgress" {
+  provider          = aws.onprem
+  security_group_id = aws_security_group.onprem-vpc-test-instance-sg.id
+  description       = "Allow all egress"
+  cidr_ipv4         = module.onprem-vpc.vpc_cidr_block
+  ip_protocol       = "-1"
+}
+
 data "aws_iam_policy_document" "assume_role" {
   provider = aws.onprem
   statement {
@@ -43,7 +59,7 @@ data "aws_iam_policy_document" "assume_role" {
 
     principals {
       type        = "Service"
-      identifiers = ["ssm.amazonaws.com"]
+      identifiers = ["ec2.amazonaws.com"]
     }
 
     actions = ["sts:AssumeRole"]
@@ -80,7 +96,7 @@ resource "aws_instance" "onprem-test-instance" {
   ami                    = data.aws_ami.amzn-linux-2023-ami.id
   instance_type          = "t3a.micro"
   subnet_id              = module.onprem-vpc.private_subnets[1]
-  vpc_security_group_ids = [aws_security_group.onprem-vpc-test-instance-sg.id]
+  vpc_security_group_ids = [aws_security_group.onprem-vpc-test-instance-sg.id, data.aws_security_group.onprem-vpc-default-sg.id]
   iam_instance_profile   = aws_iam_instance_profile.onprem-test-instance-iam-profile.id
 
   tags = {
@@ -89,7 +105,8 @@ resource "aws_instance" "onprem-test-instance" {
 }
 
 data "aws_instances" "onprem-test-instance" {
-  provider = aws.onprem
+  provider   = aws.onprem
+  depends_on = [aws_instance.onprem-test-instance]
   instance_tags = {
     Name = "onprem-test-instance"
   }
@@ -99,5 +116,5 @@ data "aws_instances" "onprem-test-instance" {
     values = [aws_security_group.onprem-vpc-test-instance-sg.id]
   }
 
-  instance_state_names = ["running"]
+  instance_state_names = ["running", "pending"]
 }

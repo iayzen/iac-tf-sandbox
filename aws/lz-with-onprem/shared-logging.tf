@@ -70,7 +70,6 @@ module "shared-logging-vpc-endpoints" {
 }
 
 resource "random_id" "bucket-id" {
-  prefix      = "shared-logs-bucket-"
   byte_length = 6
 }
 
@@ -118,8 +117,8 @@ module "shared-logs-bucket" {
   ]
 }
 EOF
-  attach_deny_insecure_transport_policy = true
-  attach_require_latest_tls_policy      = true
+  # attach_deny_insecure_transport_policy = true
+  # attach_require_latest_tls_policy      = true
 
   block_public_acls       = true
   block_public_policy     = true
@@ -138,11 +137,11 @@ module "shared-logs-bucket-sample-object" {
   source  = "terraform-aws-modules/s3-bucket/aws//modules/object"
   version = "~> 3.10.1"
   bucket  = module.shared-logs-bucket.s3_bucket_id
-  key     = "shared-logs-bucket-${random_id.bucket-id.dec}-complete"
+  key     = "logs-file-${random_id.bucket-id.dec}"
 
-  content = jsonencode({ data : formatdate("YYYY-MM-DD'T'hh:00:00Z", timestamp()) })
+  content = jsonencode({ data : formatdate("YYYY-MM-DD'T'hh:mm:ssZ", timestamp()) })
 
-  acl           = "private"
-  storage_class = "ONEZONE_IA"
+  # acl           = "private"
+  storage_class = "STANDARD"
   force_destroy = true
 }
