@@ -73,11 +73,11 @@ module "onprem-vpc" {
 
   name = "onprem-vpc"
 
-  cidr = "10.100.0.0/16"
+  cidr = local.onprem_vpc_cidr
 
-  azs             = ["eu-central-1a", "eu-central-1b", "eu-central-1c"]
-  private_subnets = ["10.100.101.0/24", "10.100.102.0/24", "10.100.103.0/24"]
-  public_subnets  = ["10.100.1.0/24", "10.100.2.0/24", "10.100.3.0/24"]
+  azs             = local.azs
+  private_subnets = [for k, v in local.azs : cidrsubnet(local.onprem_vpc_cidr, 8, k + 101)]
+  public_subnets  = [for k, v in local.azs : cidrsubnet(local.onprem_vpc_cidr, 8, k + 1)]
 
   enable_nat_gateway     = true
   single_nat_gateway     = true

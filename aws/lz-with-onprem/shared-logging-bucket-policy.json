@@ -1,0 +1,32 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAllAccessForHostingAccount",
+      "Effect": "Allow",
+	    "Principal": {
+        "AWS": "arn:aws:iam::${account_id}:root"
+      },
+      "Action": [ "s3:*" ],
+      "Resource": [
+        "arn:aws:s3:::${bucket_name}",
+        "arn:aws:s3:::${bucket_name}/*"
+      ]
+    },
+    {
+      "Sid": "AllowAcceAccessForClientsOverVPCE",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::${bucket_name}",
+        "arn:aws:s3:::${bucket_name}/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:sourceVpce": "${vpce_s3_id}"
+        }
+      }
+    }
+  ]
+}

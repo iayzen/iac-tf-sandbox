@@ -6,11 +6,10 @@ module "shared-logging-vpc" {
 
   name = "shared-logging-vpc"
 
-  cidr = "10.30.0.0/16"
+  cidr = local.shared_logging_vpc_cidr
 
-  azs             = ["eu-central-1a", "eu-central-1b"]
-  private_subnets = ["10.30.101.0/24", "10.30.102.0/24"]
-  # public_subnets  = ["10.30.1.0/24", "10.30.2.0/24"]
+  azs             = local.azs
+  private_subnets = [for k, v in local.azs : cidrsubnet(local.shared_logging_vpc_cidr, 8, k + 101)]
 
   enable_nat_gateway     = false
   single_nat_gateway     = false
@@ -69,56 +68,16 @@ module "shared-logging-vpc-endpoints" {
   }
 }
 
-resource "random_id" "bucket-id" {
-  byte_length = 6
-}
-
-locals {
-  bucket_name = "shared-logs-${random_id.bucket-id.hex}"
-  region      = "eu-central-1"
-}
-
 module "shared-logs-bucket" {
-  source                                = "terraform-aws-modules/s3-bucket/aws"
-  bucket                                = local.bucket_name
-  force_destroy                         = true
-  attach_policy                         = true
-  policy                                = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "AllowAllAccessForHostingAccount",
-      "Effect": "Allow",
-	    "Principal": {
-        "AWS": "arn:aws:iam::${data.aws_caller_identity.cloud.account_id}:root"
-      },
-      "Action": [ "s3:*" ],
-      "Resource": [
-        "arn:aws:s3:::${local.bucket_name}",
-        "arn:aws:s3:::${local.bucket_name}/*"
-      ]
-    },
-    {
-      "Sid": "AllowAcceAccessForClientsOverVPCE",
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "s3:*",
-      "Resource": [
-        "arn:aws:s3:::${local.bucket_name}",
-        "arn:aws:s3:::${local.bucket_name}/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:sourceVpce": "${module.shared-logging-vpc-endpoints.endpoints.s3.id}"
-        }
-      }
-    }
-  ]
-}
-EOF
-  # attach_deny_insecure_transport_policy = true
-  # attach_require_latest_tls_policy      = true
+  source        = "terraform-aws-modules/s3-bucket/aws"
+  bucket        = local.bucket_name
+  force_destroy = true
+  attach_policy = true
+  policy = templatefile("${path.module}/shared-logging-bucket-policy.json", {
+    account_id  = data.aws_caller_identity.cloud.account_id,
+    bucket_name = local.bucket_name,
+    vpce_s3_id  = module.shared-logging-vpc-endpoints.endpoints.s3.id
+  })
 
   block_public_acls       = true
   block_public_policy     = true
