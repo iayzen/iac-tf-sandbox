@@ -197,19 +197,6 @@ Resources:
       SecurityGroupIds:
         - !Ref vpceSecurityGroup
 
-  # logsInterfaceEndpoint:
-  #   Type: 'AWS::EC2::VPCEndpoint'
-  #   Properties:
-  #     VpcEndpointType: Interface
-  #     ServiceName: !Sub 'com.amazonaws.${AWS::Region}.logs'
-  #     VpcId: !Ref privateVpc
-  #     PrivateDnsEnabled: True
-  #     SubnetIds: 
-  #       - !Ref privateSubnet0
-  #       - !Ref privateSubnet1
-  #     SecurityGroupIds:
-  #       - !Ref vpceSecurityGroup
-
   # https://asecure.cloud/a/iam_role_ssm/
   ec2SsmRole:
     Type: "AWS::IAM::Role"
@@ -287,3 +274,10 @@ Resources:
       ResourceId: !Ref privateVpc
       ResourceType: VPC
       TrafficType: REJECT
+
+Outputs:
+  testInstanceId:
+    Description: The ID of the test instance
+    Value: !Ref testInstance
+    Export:
+      Name: !Sub "${AWS::StackName}-testInstanceId"

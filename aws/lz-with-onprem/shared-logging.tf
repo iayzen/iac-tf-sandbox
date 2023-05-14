@@ -53,6 +53,24 @@ resource "aws_vpc_security_group_ingress_rule" "shared-logging-vpc-s3-endpoint-s
   ip_protocol       = "-1"
 }
 
+resource "aws_vpc_security_group_egress_rule" "shared-logging-vpc-s3-endpoint-sg_EgressVPC" {
+  security_group_id = aws_security_group.shared-logging-vpc-s3-endpoint-sg.id
+  description       = "TLS to own VPC "
+  cidr_ipv4         = module.shared-logging-vpc.vpc_cidr_block
+  from_port         = 443
+  ip_protocol       = "tcp"
+  to_port           = 443
+}
+
+resource "aws_vpc_security_group_egress_rule" "shared-logging-vpc-s3-endpoint-sg_EgressAllInternalNetworks" {
+  security_group_id = aws_security_group.shared-logging-vpc-s3-endpoint-sg.id
+  description       = "TLS to all internal networks"
+  cidr_ipv4         = "10.0.0.0/8"
+  from_port         = 443
+  ip_protocol       = "tcp"
+  to_port           = 443
+}
+
 module "shared-logging-vpc-endpoints" {
   source             = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
   vpc_id             = module.shared-logging-vpc.vpc_id

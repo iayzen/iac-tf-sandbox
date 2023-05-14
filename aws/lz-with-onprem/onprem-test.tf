@@ -120,7 +120,7 @@ resource "aws_cloudformation_stack" "isolated-test-instance" {
   timeout_in_minutes = 10
 
   parameters = {
-    TGWId = aws_ec2_transit_gateway.this.id
+    TGWId   = aws_ec2_transit_gateway.this.id
     VpcCIDR = local.isolated_vpc_cidr
   }
 }
