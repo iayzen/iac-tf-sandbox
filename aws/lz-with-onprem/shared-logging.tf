@@ -100,7 +100,6 @@ module "shared-logs-bucket-sample-object" {
 
   content = jsonencode({ data : formatdate("YYYY-MM-DD'T'hh:mm:ssZ", timestamp()) })
 
-  # acl           = "private"
   storage_class = "STANDARD"
   force_destroy = true
 }

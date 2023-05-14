@@ -1,6 +1,6 @@
-# output "tgw-id" {
-#   value = aws_ec2_transit_gateway.this.id
-# }
+output "tgw-id" {
+  value = aws_ec2_transit_gateway.this.id
+}
 
 # output "tgw-resource-share-name" {
 #   value = aws_ram_resource_share.tgw-resource-share.name

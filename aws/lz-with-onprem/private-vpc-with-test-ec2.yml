@@ -1,0 +1,281 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS CloudFormation VPC template with 2 private subnets and endpoints for SMS management; an EC2 instance to test connectivity
+
+Parameters:
+  VpcCIDR:
+    Description: VPC CIDR
+    Type: String
+    Default: "10.100.100.0/24"
+
+  InternalNetworkCIDR:
+    Description: Internal Networks CIDR
+    Type: String
+    Default: "10.0.0.0/8"
+
+  TGWId:
+    Description: Transit Gateway ID
+    Type: String
+    Default: ""
+
+  # https://aws.amazon.com/blogs/compute/query-for-the-latest-amazon-linux-ami-ids-using-aws-systems-manager-parameter-store/
+  LatestAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64'
+
+Resources:
+
+  privateVpc:
+    Type: AWS::EC2::VPC
+    Properties: 
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      InstanceTenancy: default
+
+  privateSubnet0:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref privateVpc
+      # Calculate a subnet from the VPC CIDR
+      CidrBlock: !Select [0, !Cidr [!Ref VpcCIDR, 4, 5]]
+      AvailabilityZone: !Select [0, !GetAZs '']
+
+  privateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref privateVpc
+      CidrBlock: !Select [1, !Cidr [!Ref VpcCIDR, 4, 5]]
+      AvailabilityZone: !Select [1, !GetAZs '']
+
+  tgwVpcAttachment:
+    Type: AWS::EC2::TransitGatewayVpcAttachment
+    Properties:
+      VpcId: !Ref privateVpc
+      SubnetIds:
+        - !Ref privateSubnet0
+        - !Ref privateSubnet1
+      TransitGatewayId: !Ref TGWId
+
+  privateRouteTable0:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref privateVpc
+
+  privateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref privateVpc
+
+  privateRoute0:
+    Type: AWS::EC2::Route
+    DependsOn: [privateSubnet0, tgwVpcAttachment]
+    Properties:
+      RouteTableId: !Ref privateRouteTable0
+      DestinationCidrBlock: !Ref InternalNetworkCIDR
+      TransitGatewayId: !Ref TGWId
+
+  privateRoute1:
+    Type: AWS::EC2::Route
+    DependsOn: [privateSubnet1, tgwVpcAttachment]
+    Properties:
+      RouteTableId: !Ref privateRouteTable1
+      DestinationCidrBlock: !Ref InternalNetworkCIDR
+      TransitGatewayId: !Ref TGWId
+
+  routeTableAssociation0:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref privateSubnet0
+      RouteTableId: !Ref privateRouteTable0
+
+  routeTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref privateSubnet1
+      RouteTableId: !Ref privateRouteTable1
+
+  testInstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Security group for test EC2 instance"
+      VpcId: !Ref privateVpc
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref VpcCIDR
+
+  vpceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG for VPC Endpoints
+      VpcId: !Ref privateVpc
+      SecurityGroupIngress:
+      # The SSM Agent connects to Session Manager over TCP 443
+      - Description: allow inbound HTTPS from the EC2 instance
+        SourceSecurityGroupId: !Ref testInstanceSecurityGroup
+        FromPort: 443
+        ToPort: 443
+        IpProtocol: tcp
+      SecurityGroupEgress:
+      # The SSM Agent connects to Session Manager over TCP 443
+      - Description: allow outbound HTTPS to the VPC
+        CidrIp: !Ref VpcCIDR 
+        FromPort: 443
+        ToPort: 443
+        IpProtocol: tcp
+
+  ssmInterfaceEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      VpcEndpointType: Interface
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssm'
+      VpcId: !Ref privateVpc
+      PrivateDnsEnabled: True
+      SubnetIds: 
+        - !Ref privateSubnet0
+        - !Ref privateSubnet1
+      SecurityGroupIds:
+        - !Ref vpceSecurityGroup
+
+  ssmmessagesInterfaceEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      VpcEndpointType: Interface
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssmmessages'
+      VpcId: !Ref privateVpc
+      PrivateDnsEnabled: True
+      SubnetIds: 
+        - !Ref privateSubnet0
+        - !Ref privateSubnet1
+      SecurityGroupIds:
+        - !Ref vpceSecurityGroup
+
+  ec2InterfaceEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      VpcEndpointType: Interface
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ec2'
+      VpcId: !Ref privateVpc
+      PrivateDnsEnabled: True
+      SubnetIds: 
+        - !Ref privateSubnet0
+        - !Ref privateSubnet1
+      SecurityGroupIds:
+        - !Ref vpceSecurityGroup
+
+  ec2messagesInterfaceEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      VpcEndpointType: Interface
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ec2messages'
+      VpcId: !Ref privateVpc
+      PrivateDnsEnabled: True
+      SubnetIds: 
+        - !Ref privateSubnet0
+        - !Ref privateSubnet1
+      SecurityGroupIds:
+        - !Ref vpceSecurityGroup
+
+  s3InterfaceEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      VpcEndpointType: Interface
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcId: !Ref privateVpc
+      SubnetIds: 
+        - !Ref privateSubnet0
+        - !Ref privateSubnet1
+      SecurityGroupIds:
+        - !Ref vpceSecurityGroup
+
+  # logsInterfaceEndpoint:
+  #   Type: 'AWS::EC2::VPCEndpoint'
+  #   Properties:
+  #     VpcEndpointType: Interface
+  #     ServiceName: !Sub 'com.amazonaws.${AWS::Region}.logs'
+  #     VpcId: !Ref privateVpc
+  #     PrivateDnsEnabled: True
+  #     SubnetIds: 
+  #       - !Ref privateSubnet0
+  #       - !Ref privateSubnet1
+  #     SecurityGroupIds:
+  #       - !Ref vpceSecurityGroup
+
+  # https://asecure.cloud/a/iam_role_ssm/
+  ec2SsmRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "Ec2RoleForSSM"
+      Description: "EC2 IAM role for SSM access"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+
+  Ec2InstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      InstanceProfileName: "Ec2RoleForSSM"
+      Roles:
+        - !Ref ec2SsmRole
+
+  testInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: t2.micro
+      IamInstanceProfile: !Ref Ec2InstanceProfile
+      SubnetId: !Ref privateSubnet0
+      SecurityGroupIds:
+        - !Ref testInstanceSecurityGroup
+      Tags:
+        - Key: Name
+          Value: testInstance
+
+  flowLogDeliveryRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: 'vpc-flow-logs.amazonaws.com'
+          Action: 'sts:AssumeRole'
+      PermissionsBoundary: !Ref AWS::NoValue
+      Policies:
+      - PolicyName: flowlogs-policy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            - logs:DescribeLogGroups
+            - logs:DescribeLogStreams
+            Resource: !GetAtt flowLogGroup.Arn
+  
+  flowLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+  
+  flowLog:
+    Type: AWS::EC2::FlowLog
+    DependsOn: flowLogDeliveryRole
+    Properties:
+      DeliverLogsPermissionArn: !GetAtt flowLogDeliveryRole.Arn
+      LogGroupName: !Ref flowLogGroup
+      ResourceId: !Ref privateVpc
+      ResourceType: VPC
+      TrafficType: ALL

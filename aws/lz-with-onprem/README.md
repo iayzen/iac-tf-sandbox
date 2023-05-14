@@ -31,4 +31,5 @@ b) shared logging component of an AWS LZ.
 - Create an S3 bucket, ensure no public access
 - (Create a test text file to the S3 bucket?)
 - Create a TGW VPN attachment (?)
-- 
+
+# 

@@ -36,7 +36,8 @@
 		"vscode": {
 			"extensions": [
 				"HashiCorp.terraform",
-				"danielthielking.aws-cloudformation-yaml"
+				"danielthielking.aws-cloudformation-yaml",
+				"mohammadbaqer.better-folding"
 			]
 		}
 	},
