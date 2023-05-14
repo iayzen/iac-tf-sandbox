@@ -20,7 +20,8 @@ resource "aws_vpc_security_group_egress_rule" "onprem-vpc-test-instance-sg_Egres
   provider          = aws.onprem
   security_group_id = aws_security_group.onprem-vpc-test-instance-sg.id
   description       = "TLS traffic to VPC CIDR"
-  cidr_blocks       = module.onprem-vpc.vpc_cidr_block
+  cidr_ipv4         = module.onprem-vpc.vpc_cidr_block
+  ip_protocol       = "tcp"
   from_port         = 443
   to_port           = 443
 }
@@ -85,7 +86,7 @@ resource "aws_iam_instance_profile" "onprem-test-instance-iam-profile" {
 resource "aws_instance" "onprem-test-instance" {
   provider               = aws.onprem
   ami                    = data.aws_ami.amzn-linux-2023-ami.id
-  instance_type          = "t3a.micro"
+  instance_type          = "t3.micro"
   subnet_id              = module.onprem-vpc.private_subnets[1]
   vpc_security_group_ids = [aws_security_group.onprem-vpc-test-instance-sg.id, data.aws_security_group.onprem-vpc-default-sg.id]
   iam_instance_profile   = aws_iam_instance_profile.onprem-test-instance-iam-profile.id
@@ -113,12 +114,13 @@ data "aws_instances" "onprem-test-instance" {
 resource "aws_cloudformation_stack" "isolated-test-instance" {
   provider           = aws.onprem
   depends_on         = [aws_ec2_transit_gateway.this, aws_ram_principal_association.tgw-resource-share-invite]
-  name               = "strongswan-vpn-gateway"
+  name               = "isolated-test-instance"
   template_body      = file("${path.module}/private-vpc-with-test-ec2.yml")
   capabilities       = ["CAPABILITY_NAMED_IAM"]
   timeout_in_minutes = 10
 
   parameters = {
     TGWId = aws_ec2_transit_gateway.this.id
+    VpcCIDR = local.isolated_vpc_cidr
   }
 }

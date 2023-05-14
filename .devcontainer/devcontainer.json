@@ -41,7 +41,7 @@
 			]
 		}
 	},
-	"postCreateCommand": ". ${NVM_DIR}/nvm.sh"
+	"postCreateCommand": ". ${NVM_DIR}/nvm.sh && curl 'https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_arm64/session-manager-plugin.deb' -o ~/session-manager-plugin.deb && sudo dpkg -i ~/session-manager-plugin.deb && rm ~/session-manager-plugin.deb"
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},

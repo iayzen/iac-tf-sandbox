@@ -104,6 +104,14 @@ Resources:
           FromPort: 443
           ToPort: 443
           CidrIp: !Ref VpcCIDR
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref InternalNetworkCIDR
+        - IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1
+          CidrIp: !Ref InternalNetworkCIDR
 
   vpceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -278,4 +286,4 @@ Resources:
       LogGroupName: !Ref flowLogGroup
       ResourceId: !Ref privateVpc
       ResourceType: VPC
-      TrafficType: ALL
+      TrafficType: REJECT

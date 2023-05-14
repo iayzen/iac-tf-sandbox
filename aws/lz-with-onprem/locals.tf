@@ -12,6 +12,7 @@ locals {
   shared_networking_vpc_cidr = "10.20.0.0/16"
   onprem_vpc_cidr            = "10.100.0.0/16"
   shared_logging_vpc_cidr    = "10.30.0.0/16"
+  isolated_vpc_cidr          = "10.200.50.0/24"
 }
 
 data "aws_availability_zones" "available" {}

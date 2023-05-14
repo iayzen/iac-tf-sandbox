@@ -6,6 +6,7 @@ resource "aws_ec2_transit_gateway" "this" {
   default_route_table_propagation = "enable"
   dns_support                     = "enable"
   vpn_ecmp_support                = "enable"
+  auto_accept_shared_attachments  = "enable"
 }
 
 resource "aws_ram_resource_share" "tgw-resource-share" {
