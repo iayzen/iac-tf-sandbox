@@ -26,6 +26,26 @@ resource "aws_vpc_security_group_egress_rule" "onprem-vpc-test-instance-sg_Egres
   to_port           = 443
 }
 
+resource "aws_vpc_security_group_egress_rule" "onprem-vpc-test-instance-sg_EgressTLSInternalNetworks" {
+  provider          = aws.onprem
+  security_group_id = aws_security_group.onprem-vpc-test-instance-sg.id
+  description       = "TLS traffic to all internal networks"
+  cidr_ipv4         = "10.0.0.0/8"
+  ip_protocol       = "tcp"
+  from_port         = 443
+  to_port           = 443
+}
+
+resource "aws_vpc_security_group_egress_rule" "onprem-vpc-test-instance-sg_EgressICMP" {
+  provider          = aws.onprem
+  security_group_id = aws_security_group.onprem-vpc-test-instance-sg.id
+  description       = "Egress ICMP traffic to VPC CIDR"
+  cidr_ipv4         = "10.0.0.0/8"
+  ip_protocol       = "ICMP"
+  from_port         = -1
+  to_port           = -1
+}
+
 resource "aws_vpc_security_group_ingress_rule" "onprem-vpc-test-instance-sg_AllVPCTraffic" {
   provider          = aws.onprem
   security_group_id = aws_security_group.onprem-vpc-test-instance-sg.id
